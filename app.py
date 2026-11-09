@@ -1,4 +1,4 @@
-"""YMC BTC Predictor AI Pro 4.4.0 TEST TEST — market analytics, no execution or claimed AI probabilities."""
+"""YMC BTC Predictor AI Pro 4.5.0 COMPACT TEST TEST — market analytics, no execution or claimed AI probabilities."""
 import time
 from datetime import datetime, timezone
 import numpy as np
@@ -9,7 +9,7 @@ import requests
 import streamlit as st
 from ai_engine import estimate
 
-st.set_page_config(page_title='YMC · BTC AI Pro 4.4.0 TEST',page_icon='₿',layout='wide',initial_sidebar_state='collapsed')
+st.set_page_config(page_title='YMC · BTC AI Pro 4.5.0 COMPACT TEST',page_icon='₿',layout='wide',initial_sidebar_state='collapsed')
 st.markdown('''<style>
 :root{color-scheme:dark}html,body,[data-testid="stAppViewContainer"]{background:#030917;color:#eaf5ff}
 [data-testid="stAppViewContainer"]{background:radial-gradient(ellipse at 4% 0%,#123c56 0%,transparent 40%),radial-gradient(ellipse at 95% 3%,#29204b 0%,transparent 35%),#030917}
@@ -27,7 +27,7 @@ st.markdown('''<style>
 @media(max-width:650px){[data-testid="stHorizontalBlock"]{gap:.3rem!important}[data-testid="stSegmentedControl"] button{min-height:44px;padding:.2rem .45rem!important;font-size:12px!important}.section{margin:3px 0 1px}.hero{margin:2px 0 3px}.brand{padding:2px 1px 4px}.pills{margin-bottom:2px}.pill{padding:3px 6px;font-size:9px}[data-testid="stVerticalBlock"]{gap:.16rem}[data-testid="stToggle"]{margin:0}.block-container{padding:.25rem .38rem 1rem!important}.hero{grid-template-columns:1fr 1fr}.hero .panel:last-child{grid-column:span 2;padding:8px 11px}.hero .panel:last-child .sv{display:inline;font-size:16px;margin-right:8px}.panel{padding:10px 8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.brandname{font-size:15px;overflow-wrap:anywhere}.ymc{font-size:16px;padding:8px}.tag{font-size:8px;letter-spacing:.4px}.brand{align-items:flex-start;gap:7px;flex-wrap:wrap}.brand>div:last-child{min-width:0;flex:1}.pills{position:relative;z-index:0}.section{clear:both}}
 </style>''',unsafe_allow_html=True)
 
-HEADERS={'User-Agent':'YMC-Research-Dashboard/4.4.0 TEST','Accept':'application/json'}
+HEADERS={'User-Agent':'YMC-Research-Dashboard/4.5.0 COMPACT TEST','Accept':'application/json'}
 @st.cache_data(ttl=7,show_spinner=False)
 def get_json(url,params=None):
     r=requests.get(url,params=params,headers=HEADERS,timeout=9);r.raise_for_status();return r.json()
@@ -183,76 +183,95 @@ def make_chart(df,minutes,show_ema,show_volume,height,price=None):
 def panel(title,value,sub,extra=''):
     return f'<div class="panel {extra}"><div class="k">{title}</div><div class="v">{value}</div><div class="small">{sub}</div></div>'
 
-st.markdown('<div class="brand"><div class="ymc">♛ YMC</div><div><div class="brandname">BTC PREDICTOR <span class="gold">AI PRO 4.4.0 TEST</span></div><div class="tag">YMC MARKET INTELLIGENCE · KALSHI 15M</div></div></div>',unsafe_allow_html=True)
-st.markdown('<div class="pills"><span class="pill"><span class="dot"></span> DATOS EN REVISIÓN CADA ~10 S</span><span class="pill">₿ BTC/USD</span><span class="pill">🔒 SIN APUESTAS AUTOMÁTICAS</span></div>',unsafe_allow_html=True)
 
-# Controls live OUTSIDE the fragment so a timed rerun doesn't reset the user's selected view.
-st.markdown('<div class="section">📈 MERCADO BTC/USD · GRÁFICA INTERACTIVA</div>',unsafe_allow_html=True)
-a,b=st.columns([4,1],vertical_alignment='center')
-with a:
-    interval=st.segmented_control('Intervalo',[1,5,15,30,60],format_func=lambda v:{1:'1m',5:'5m',15:'15m',30:'30m',60:'1h'}[v],default=1,key='interval',label_visibility='collapsed')
-with b:
-    expanded=st.toggle('Grande',value=False,key='expanded',help='Amplía la altura de la gráfica')
-with st.expander('⚙️ Personalizar indicadores',expanded=False):
-    c,d=st.columns(2)
-    with c:ema=st.toggle('EMA 9 / 21',value=True,key='ema')
-    with d:volume=st.toggle('Volumen',value=True,key='volume')
+# Mobile-first compact layout. Market validation and AI engine are unchanged.
+st.markdown("""
+<style>
+html,body,[data-testid="stAppViewContainer"]{overflow-x:hidden!important}
+.block-container{padding:.18rem .42rem .7rem!important;max-width:1000px}
+[data-testid="stVerticalBlock"]{gap:.12rem!important}
+[data-testid="stHeader"]{height:0!important;min-height:0!important}
+header[data-testid="stHeader"]{display:none}
+.brand{padding:0!important;margin:0!important;min-height:40px;gap:7px}
+.ymc{font-size:14px!important;padding:6px 8px!important;border-radius:9px!important}
+.brandname{font-size:clamp(13px,3.7vw,20px)!important;line-height:1.05!important}
+.tag{font-size:8px!important;margin-top:2px!important}
+.pills,.section,.hero,.stats,.strip{display:none!important}
+[data-testid="stSelectbox"]{max-width:116px!important}
+[data-testid="stSelectbox"] label{display:none!important}
+[data-testid="stSelectbox"] [data-baseweb="select"]>div{background:#122b42!important;border:1px solid #3f9dc3!important;border-radius:10px!important;min-height:36px!important}
+[data-testid="stPlotlyChart"]{margin:0!important;border-radius:12px!important}
+[data-testid="stPlotlyChart"]>div{min-height:0!important}
+[data-testid="stExpander"]{border-color:#2b536e!important}
+[data-testid="stExpander"] summary{min-height:34px!important;padding:4px 10px!important}
+[data-testid="stCaptionContainer"]{display:none!important}
+.marketbar{display:grid;grid-template-columns:1.2fr 1fr;gap:6px;margin:3px 0 4px}
+.marketcell{border:1px solid #315b78;background:linear-gradient(140deg,#11324b,#071525);border-radius:11px;padding:7px 9px;min-width:0}
+.marketlabel{font-size:9px;color:#93b9d2;font-weight:750;letter-spacing:.5px}
+.marketvalue{font-size:clamp(17px,5.2vw,26px);font-weight:900;line-height:1.18;margin:3px 0;white-space:nowrap}
+.marketsub{font-size:9px;color:#b5cce0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.airow{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}
+.aicell{background:#0b2438;border:1px solid #285b75;border-radius:10px;padding:7px 9px;min-width:0}
+.aicell strong{font-size:12px;display:block;line-height:1.35}
+.aicell small{font-size:9px;color:#a8c5d9;display:block}
+.statusline{font-size:9px;color:#91b8d2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 3px}
+@media(max-width:650px){
+.block-container{padding:.08rem .3rem .4rem!important}
+[data-testid="stVerticalBlock"]{gap:.08rem!important}
+[data-testid="stPlotlyChart"]{box-shadow:none!important}
+}
+</style>
+""",unsafe_allow_html=True)
+st.markdown('<div class="brand"><div class="ymc">♛ YMC</div><div><div class="brandname">BTC PREDICTOR <span class="gold">AI PRO 4.5</span></div><div class="tag">MARKET INTELLIGENCE · 15M · TEST</div></div></div>',unsafe_allow_html=True)
+
+# One small timeframe selector instead of five large white tabs.
+interval = st.selectbox('Temporalidad', [1,5,15,30,60], format_func=lambda v: {1:'1 minuto',5:'5 minutos',15:'15 minutos',30:'30 minutos',60:'1 hora'}[v], key='compact_interval',label_visibility='collapsed')
 
 @st.fragment(run_every='10s')
 def live():
     source,df,price,ts,failures=choose_source()
     if source is None:
-        st.markdown('<div class="notice">⚠️ Datos no validados. Señales suspendidas. No se presentan precios antiguos como actuales.</div>',unsafe_allow_html=True)
-        with st.expander('Diagnóstico de conexión',expanded=True):
-            st.write('Reloj servidor UTC:',datetime.now(timezone.utc).isoformat())
-            for f in failures:st.write(f)
+        st.error('Sin datos verificados. Señales suspendidas.')
+        with st.expander('Diagnóstico',expanded=True):
+            for f in failures: st.write(f)
         return
-    try:r=indicators(candles(source,15),15)
-    except ValueError as e:
-        st.warning(f'Análisis suspendido: {e}');r=None
-    signal=r['signal'] if r else 'SUSPENDIDA';cls='up' if signal=='ALCISTA' else 'down' if signal=='BAJISTA' else 'wait'
-    closed_1m=df.loc[df.timestamp+60<=time.time()-3]
-    ref=float(closed_1m.close.iloc[-1]) if len(closed_1m) else None
-    pct=(price/ref-1)*100 if ref is not None else None
-    cards=panel('PRECIO BTC / USD',f'${price:,.2f}',f'{pct:+.2f}% frente a última vela 1m cerrada' if pct is not None else 'Cierre 1m no disponible','pricepanel')+panel('SEÑAL TÉCNICA · VELAS 15M',f'<span class="{cls}">{signal}</span>',f'{r["votes"]}/5 criterios alcistas · No es probabilidad' if r else 'Sin análisis válido','signalpanel')+panel('FUENTE DE MERCADO',source,f'Última consulta: {datetime.now(timezone.utc).strftime("%H:%M:%S")} UTC')
-    st.markdown('<div class="hero">'+cards+'</div>',unsafe_allow_html=True)
-    if failures:st.markdown('<div class="notice noticegood">ℹ️ Fuente secundaria activada. Consulta el diagnóstico para saber por qué falló Coinbase.</div>',unsafe_allow_html=True)
+    try:
+        r=indicators(candles(source,15),15)
+    except ValueError:
+        r=None
+    signal=r['signal'] if r else 'ESPERAR'
+    cls='up' if signal=='ALCISTA' else 'down' if signal=='BAJISTA' else 'wait'
+    st.markdown(
+        '<div class="marketbar">'
+        f'<div class="marketcell"><div class="marketlabel">BTC / USD</div><div class="marketvalue">${price:,.2f}</div><div class="marketsub">{source}</div></div>'
+        f'<div class="marketcell"><div class="marketlabel">TÉCNICA · 15M</div><div class="marketvalue {cls}">{signal}</div><div class="marketsub">{str(r["votes"])+"/5 criterios" if r else "Sin señal válida"}</div></div>'
+        '</div>',unsafe_allow_html=True)
     try:
         plotdf=df if interval==1 else candles(source,interval)
-        fig=make_chart(plotdf,interval,ema,volume,630 if expanded else 490,price)
-        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':True,'scrollZoom':True,'doubleClick':'reset','responsive':True,'displaylogo':False},key=f'candles_{interval}_{expanded}_{ema}_{volume}')
-        st.caption('👆 Desliza para explorar · pellizca para zoom (según navegador). La última vela puede estar abierta. Señal basada en velas de 15m cerradas.')
+        fig=make_chart(plotdf,interval,True,True,400,price)
+        fig.update_layout(margin=dict(l=0,r=48,t=4,b=0),font=dict(size=10),dragmode='pan')
+        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False,'scrollZoom':True,'doubleClick':'reset','responsive':True,'displaylogo':False},key=f'compact_chart_{interval}')
     except (ValueError,requests.RequestException,KeyError,TypeError) as e:
-        st.error(f'Gráfica {interval}m suspendida: {e}. No se dibujan velas inventadas.')
-    st.markdown('<div class="section">🧠 IA EXPERIMENTAL · 10 Y 15 MINUTOS</div>',unsafe_allow_html=True)
-    st.caption('Modelo estadístico entrenado con velas de 1m de la fuente activa. No utiliza datos de traders externos ni predice el resultado oficial de Kalshi.')
+        st.error(f'Gráfica no disponible: {e}')
+    ai=[]
     try:
-        for h in (10, 15):
-            prediction = estimate(df, h)
-            direction = prediction['signal']
-            score = prediction['validation_accuracy']
-            baseline = prediction['baseline']
-            with st.container(border=True):
-                st.markdown(f'**Horizonte {h} minutos · {direction}**')
-                if prediction['validated']:
-                    st.write(f'Probabilidad estimada de subida (modelo): {prediction["probability"]:.1%} · Solo experimental')
-                else:
-                    st.write('Predicción suspendida: el modelo aún no supera suficientemente su referencia histórica.')
-                st.caption(f'Prueba histórica separada: {score:.1%} de aciertos frente a {baseline:.1%} de referencia · {prediction["validation_samples"]} muestras · Sin garantía de resultados futuros')
-    except (ValueError, TypeError, KeyError) as e:
-        st.info(f'IA en espera de datos válidos: {e}')
-    if r:
-        stats=[('RSI (14)',f'{r["rsi"]:.1f}'),('EMA 9 / 21',f'{r["ema9"]:,.0f} / {r["ema21"]:,.0f}'),('MACD HIST.',f'{r["macd"]:+.2f}'),('SEÑALES',f'{r["votes"]} de 5')]
-        st.markdown('<div class="stats">'+''.join(f'<div class="stat"><span class="k">{a}</span><b>{b}</b></div>' for a,b in stats)+'</div>',unsafe_allow_html=True)
-        with st.expander('🧠 Explicación transparente de la señal'):
-            for label,passed in r['checks'].items():st.write(('🟢' if passed else '🔴')+' '+label)
-            st.info('Estos son criterios técnicos, NO una IA predictiva entrenada. No existe una probabilidad de acierto verificada.')
-    with st.expander('🔍 Estado de fuentes y calidad de datos'):
-        st.write('Fuente seleccionada:',source)
-        st.write('Última vela:',pd.to_datetime(df.timestamp.iloc[-1],unit='s',utc=True))
-        st.write('Ticker:',f'${price:,.2f}', '· con hora de intercambio' if ts is not None else '· sin hora de intercambio')
-        for f in failures:st.write('• '+f)
-        st.write('La fuente secundaria nunca se mezcla con las velas de la fuente principal.')
-    st.markdown('<div class="foot">Herramienta educativa. Las señales son heurísticas y no garantizan el resultado de un contrato de Kalshi. El precio de BTC/USD de un exchange puede diferir del índice y precio de liquidación del contrato. No ejecuta operaciones.</div>',unsafe_allow_html=True)
-
+        for horizon in (10,15):
+            p=estimate(df,horizon)
+            state=p['signal'] if p['validated'] else 'EN EVALUACIÓN'
+            ai.append((horizon,state,f'{p["validation_accuracy"]:.1%} prueba · {p["validation_samples"]} muestras'))
+    except (ValueError,TypeError,KeyError) as e:
+        ai=[(10,'SIN DATOS','Modelo en espera'),(15,'SIN DATOS','Modelo en espera')]
+    st.markdown('<div class="airow">'+''.join(
+        f'<div class="aicell"><small>IA · {h} MIN</small><strong>{state}</strong><small>{detail}</small></div>'
+        for h,state,detail in ai)+'</div>',unsafe_allow_html=True)
+    st.markdown(f'<div class="statusline">● {source} · {datetime.now(timezone.utc).strftime("%H:%M:%S")} UTC · IA experimental · Sin operaciones automáticas</div>',unsafe_allow_html=True)
+    with st.expander('Indicadores, IA y diagnóstico · detalles'):
+        if r:
+            st.write(f'RSI: {r["rsi"]:.1f} · EMA9: {r["ema9"]:,.1f} · EMA21: {r["ema21"]:,.1f} · MACD: {r["macd"]:+.2f}')
+            for label,passed in r['checks'].items():
+                st.write(('🟢 ' if passed else '🔴 ')+label)
+        for h,state,detail in ai:
+            st.write(f'IA {h} min: {state} · {detail}')
+        for f in failures: st.write(f)
+        st.caption('La IA experimental no tiene precisión futura demostrada. No representa el resultado oficial de Kalshi.')
 live()
