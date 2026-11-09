@@ -1,4 +1,4 @@
-"""YMC BTC Predictor AI Pro 4.3.0 DIAG TEST — market analytics, no execution or claimed AI probabilities."""
+"""YMC BTC Predictor AI Pro 4.4.0 TEST TEST — market analytics, no execution or claimed AI probabilities."""
 import time
 from datetime import datetime, timezone
 import numpy as np
@@ -7,8 +7,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import requests
 import streamlit as st
+from ai_engine import estimate
 
-st.set_page_config(page_title='YMC · BTC AI Pro 4.3.0 DIAG',page_icon='₿',layout='wide',initial_sidebar_state='collapsed')
+st.set_page_config(page_title='YMC · BTC AI Pro 4.4.0 TEST',page_icon='₿',layout='wide',initial_sidebar_state='collapsed')
 st.markdown('''<style>
 :root{color-scheme:dark}html,body,[data-testid="stAppViewContainer"]{background:#030917;color:#eaf5ff}
 [data-testid="stAppViewContainer"]{background:radial-gradient(ellipse at 4% 0%,#123c56 0%,transparent 40%),radial-gradient(ellipse at 95% 3%,#29204b 0%,transparent 35%),#030917}
@@ -16,9 +17,9 @@ st.markdown('''<style>
 #MainMenu,footer,[data-testid="stToolbar"]{visibility:hidden}[data-testid="stVerticalBlock"]{gap:.35rem}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 1px 8px}.ymc{flex:none;font-weight:950;font-size:19px;letter-spacing:1px;color:#ffdb80;border:1px solid #d4a84b;border-radius:12px;background:linear-gradient(145deg,#4e381c,#0d192a);padding:10px 11px;box-shadow:0 0 18px #e7ac4138}.brandname{font-size:clamp(17px,4vw,28px);font-weight:900;line-height:1.12;letter-spacing:-.4px}.tag{font-size:10px;color:#8ec5ed;letter-spacing:1.1px;margin-top:4px}
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:5px}.pill{font-size:10px;color:#bbd5ed;border:1px solid #31546f;border-radius:22px;background:#10283c;padding:5px 8px}.dot{display:inline-block;background:#15e2a4;width:7px;height:7px;border-radius:50%;margin-right:5px;box-shadow:0 0 10px #15e2a4;animation:pulse 2s infinite}@keyframes pulse{50%{opacity:.4}}
-.hero{display:grid;grid-template-columns:1.12fr 1fr 0.9fr;gap:7px;margin:4px 0 6px}.panel{background:linear-gradient(145deg,#123047,#081627 75%);border:1px solid #356483;border-radius:15px;padding:11px;box-shadow:0 0 15px #116da41c,inset 0 1px #ffffff20;min-width:0}.panel.pricepanel{border-color:#9b783d}.panel.signalpanel{border-color:#277a80}.k{font-size:10px;color:#9abbd4;font-weight:800;letter-spacing:.7px}.v{font-size:clamp(19px,4.6vw,32px);font-weight:900;margin:7px 0 4px;white-space:nowrap;letter-spacing:-.5px}.sv{font-size:clamp(17px,4.4vw,30px);font-weight:950;margin:7px 0 4px}.up{color:#21efab}.down{color:#ff648b}.wait{color:#ffce6b}.small{font-size:10px;color:#b6cadb;line-height:1.4}.strip{font-size:11px;color:#a9c8df;margin:5px 1px 8px}.gold{color:#ffda80}.section{font-weight:900;font-size:15px;margin:6px 0 2px}.notice{background:#35231f;border:1px solid #9d6b3b;color:#ffd6a1;border-radius:10px;padding:8px 10px;font-size:11px}.noticegood{background:#102a31;border-color:#256b77;color:#b5eaf4}
+.hero{display:grid;grid-template-columns:1.12fr 1fr 0.9fr;gap:7px;margin:4px 0 6px}.panel{background:linear-gradient(145deg,#123047,#081627 75%);border:1px solid #356483;border-radius:15px;padding:7px 10px;box-shadow:0 0 15px #116da41c,inset 0 1px #ffffff20;min-width:0}.panel.pricepanel{border-color:#9b783d}.panel.signalpanel{border-color:#277a80}.k{font-size:10px;color:#9abbd4;font-weight:800;letter-spacing:.7px}.v{font-size:clamp(19px,4.6vw,32px);font-weight:900;margin:3px 0 2px;white-space:nowrap;letter-spacing:-.5px}.sv{font-size:clamp(17px,4.4vw,30px);font-weight:950;margin:7px 0 4px}.up{color:#21efab}.down{color:#ff648b}.wait{color:#ffce6b}.small{font-size:10px;color:#b6cadb;line-height:1.4}.strip{font-size:11px;color:#a9c8df;margin:5px 1px 8px}.gold{color:#ffda80}.section{font-weight:900;font-size:15px;margin:6px 0 2px}.notice{background:#35231f;border:1px solid #9d6b3b;color:#ffd6a1;border-radius:10px;padding:8px 10px;font-size:11px}.noticegood{background:#102a31;border-color:#256b77;color:#b5eaf4}
 [data-testid="stPlotlyChart"]{border:1px solid #32678b;border-radius:15px;overflow:hidden;box-shadow:0 0 18px #087cb326;background:#051322}
-[data-testid="stButton"] button{min-height:43px;border:1px solid #367ca6;border-radius:11px;background:linear-gradient(145deg,#153650,#0a1c31);color:#e8f6ff;font-weight:750;box-shadow:inset 0 1px #ffffff1a}
+[data-testid="stButton"] button{min-height:38px;border:1px solid #367ca6;border-radius:11px;background:linear-gradient(145deg,#153650,#0a1c31);color:#e8f6ff;font-weight:750;box-shadow:inset 0 1px #ffffff1a}
 [data-testid="stButton"] button:hover{border-color:#35c9ff;color:#fff}
 [data-testid="stSegmentedControl"] button{min-height:42px}
 [data-testid="stToggle"] label{font-size:12px}
@@ -26,7 +27,7 @@ st.markdown('''<style>
 @media(max-width:650px){[data-testid="stHorizontalBlock"]{gap:.3rem!important}[data-testid="stSegmentedControl"] button{min-height:44px;padding:.2rem .45rem!important;font-size:12px!important}.section{margin:3px 0 1px}.hero{margin:2px 0 3px}.brand{padding:2px 1px 4px}.pills{margin-bottom:2px}.pill{padding:3px 6px;font-size:9px}[data-testid="stVerticalBlock"]{gap:.16rem}[data-testid="stToggle"]{margin:0}.block-container{padding:.25rem .38rem 1rem!important}.hero{grid-template-columns:1fr 1fr}.hero .panel:last-child{grid-column:span 2;padding:8px 11px}.hero .panel:last-child .sv{display:inline;font-size:16px;margin-right:8px}.panel{padding:10px 8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.brandname{font-size:15px;overflow-wrap:anywhere}.ymc{font-size:16px;padding:8px}.tag{font-size:8px;letter-spacing:.4px}.brand{align-items:flex-start;gap:7px;flex-wrap:wrap}.brand>div:last-child{min-width:0;flex:1}.pills{position:relative;z-index:0}.section{clear:both}}
 </style>''',unsafe_allow_html=True)
 
-HEADERS={'User-Agent':'YMC-Research-Dashboard/4.3.0 DIAG','Accept':'application/json'}
+HEADERS={'User-Agent':'YMC-Research-Dashboard/4.4.0 TEST','Accept':'application/json'}
 @st.cache_data(ttl=7,show_spinner=False)
 def get_json(url,params=None):
     r=requests.get(url,params=params,headers=HEADERS,timeout=9);r.raise_for_status();return r.json()
@@ -182,17 +183,17 @@ def make_chart(df,minutes,show_ema,show_volume,height,price=None):
 def panel(title,value,sub,extra=''):
     return f'<div class="panel {extra}"><div class="k">{title}</div><div class="v">{value}</div><div class="small">{sub}</div></div>'
 
-st.markdown('<div class="brand"><div class="ymc">♛ YMC</div><div><div class="brandname">BTC PREDICTOR <span class="gold">AI PRO 4.3.0 DIAG</span></div><div class="tag">YMC MARKET INTELLIGENCE · KALSHI 15M</div></div></div>',unsafe_allow_html=True)
+st.markdown('<div class="brand"><div class="ymc">♛ YMC</div><div><div class="brandname">BTC PREDICTOR <span class="gold">AI PRO 4.4.0 TEST</span></div><div class="tag">YMC MARKET INTELLIGENCE · KALSHI 15M</div></div></div>',unsafe_allow_html=True)
 st.markdown('<div class="pills"><span class="pill"><span class="dot"></span> DATOS EN REVISIÓN CADA ~10 S</span><span class="pill">₿ BTC/USD</span><span class="pill">🔒 SIN APUESTAS AUTOMÁTICAS</span></div>',unsafe_allow_html=True)
 
 # Controls live OUTSIDE the fragment so a timed rerun doesn't reset the user's selected view.
-st.markdown('<div class="section">📈 VELAS JAPONESAS · BTC/USD</div>',unsafe_allow_html=True)
+st.markdown('<div class="section">📈 MERCADO BTC/USD · GRÁFICA INTERACTIVA</div>',unsafe_allow_html=True)
 a,b=st.columns([4,1],vertical_alignment='center')
 with a:
     interval=st.segmented_control('Intervalo',[1,5,15,30,60],format_func=lambda v:{1:'1m',5:'5m',15:'15m',30:'30m',60:'1h'}[v],default=1,key='interval',label_visibility='collapsed')
 with b:
     expanded=st.toggle('Grande',value=False,key='expanded',help='Amplía la altura de la gráfica')
-with st.expander('⚙️ Herramientas de gráfica · EMA / Volumen',expanded=False):
+with st.expander('⚙️ Personalizar indicadores',expanded=False):
     c,d=st.columns(2)
     with c:ema=st.toggle('EMA 9 / 21',value=True,key='ema')
     with d:volume=st.toggle('Volumen',value=True,key='volume')
@@ -218,11 +219,28 @@ def live():
     if failures:st.markdown('<div class="notice noticegood">ℹ️ Fuente secundaria activada. Consulta el diagnóstico para saber por qué falló Coinbase.</div>',unsafe_allow_html=True)
     try:
         plotdf=df if interval==1 else candles(source,interval)
-        fig=make_chart(plotdf,interval,ema,volume,610 if expanded else 425,price)
-        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':False,'scrollZoom':True,'doubleClick':'reset','responsive':True,'displaylogo':False},key=f'candles_{interval}_{expanded}_{ema}_{volume}')
+        fig=make_chart(plotdf,interval,ema,volume,630 if expanded else 490,price)
+        st.plotly_chart(fig,use_container_width=True,config={'displayModeBar':True,'scrollZoom':True,'doubleClick':'reset','responsive':True,'displaylogo':False},key=f'candles_{interval}_{expanded}_{ema}_{volume}')
         st.caption('👆 Desliza para explorar · pellizca para zoom (según navegador). La última vela puede estar abierta. Señal basada en velas de 15m cerradas.')
     except (ValueError,requests.RequestException,KeyError,TypeError) as e:
         st.error(f'Gráfica {interval}m suspendida: {e}. No se dibujan velas inventadas.')
+    st.markdown('<div class="section">🧠 IA EXPERIMENTAL · 10 Y 15 MINUTOS</div>',unsafe_allow_html=True)
+    st.caption('Modelo estadístico entrenado con velas de 1m de la fuente activa. No utiliza datos de traders externos ni predice el resultado oficial de Kalshi.')
+    try:
+        for h in (10, 15):
+            prediction = estimate(df, h)
+            direction = prediction['signal']
+            score = prediction['validation_accuracy']
+            baseline = prediction['baseline']
+            with st.container(border=True):
+                st.markdown(f'**Horizonte {h} minutos · {direction}**')
+                if prediction['validated']:
+                    st.write(f'Probabilidad estimada de subida (modelo): {prediction["probability"]:.1%} · Solo experimental')
+                else:
+                    st.write('Predicción suspendida: el modelo aún no supera suficientemente su referencia histórica.')
+                st.caption(f'Prueba histórica separada: {score:.1%} de aciertos frente a {baseline:.1%} de referencia · {prediction["validation_samples"]} muestras · Sin garantía de resultados futuros')
+    except (ValueError, TypeError, KeyError) as e:
+        st.info(f'IA en espera de datos válidos: {e}')
     if r:
         stats=[('RSI (14)',f'{r["rsi"]:.1f}'),('EMA 9 / 21',f'{r["ema9"]:,.0f} / {r["ema21"]:,.0f}'),('MACD HIST.',f'{r["macd"]:+.2f}'),('SEÑALES',f'{r["votes"]} de 5')]
         st.markdown('<div class="stats">'+''.join(f'<div class="stat"><span class="k">{a}</span><b>{b}</b></div>' for a,b in stats)+'</div>',unsafe_allow_html=True)
