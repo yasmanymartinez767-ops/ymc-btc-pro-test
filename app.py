@@ -209,64 +209,7 @@ def live_top():
     source,df,price,failures=choose_source()
     if source is None:
         st.error("Sin datos verificados. Señales suspendidas.")
-        with st.expander("Diagnóstico",expanded=True):
-            for f in failures: st.write(f)
-        return
-    try: r=indicators(candles(source,15),15)
-    except ValueError: r=None
-    signal=r["signal"] if r else "ESPERAR"
-    # Status comes from the conservative, tested bridge; no invented accuracy.
-    ai = [(h, get_ai_status(df, h)) for h in (10, 15)]
-    ai_head = "IA EN EVALUACIÓN" if all(v["status"] == "EN EVALUACIÓN" for _, v in ai) else "IA SIN VALIDAR"
-    ai_head = escape(ai_head)
-    bullish=signal=="ALCISTA";bearish=signal=="BAJISTA"
-    st.markdown(
-        '<div class="topcards">'
-        f'<div class="topcard ai"><div class="symbol">▣ IA</div><div class="word">{ai_head}</div><div class="detail">Experimental · 15M</div></div>'
-        f'<div class="topcard bull {"inactive" if not bullish else ""}"><div class="symbol">↗</div><div class="word">SUBE</div><div class="detail">{"Señal técnica" if bullish else "No confirmado"}</div></div>'
-        f'<div class="topcard bear {"inactive" if not bearish else ""}"><div class="symbol">↘</div><div class="word">BAJA</div><div class="detail">{"Señal técnica" if bearish else "No confirmado"}</div></div>'
-        '</div>',unsafe_allow_html=True)
-    st.markdown(f'<div class="pricebar"><div class="pair">₿ BTC / USD</div><div class="price">${price:,.2f}</div><div class="source">{source} ●</div></div>',unsafe_allow_html=True)
-
-@st.fragment(run_every="60s")
-def stable_chart():
-    source, df, price, failures = choose_source()
-    if source is None:
-        st.warning("Gráfica en espera de datos verificados")
-        return
-    try:
-        plotdf=df if interval==1 else candles(source,interval)
-        st.plotly_chart(make_chart(plotdf,interval,price),width="stretch",config={"displayModeBar":False,"modeBarButtonsToRemove":["lasso2d","select2d"],"scrollZoom":True,"staticPlot":False,"doubleClickDelay":400,"doubleClick":"reset","responsive":True,"displaylogo":False},key=f"ymc_chart_{interval}")
-    except (ValueError,requests.RequestException,KeyError,TypeError) as e:
-        st.error(f"Gráfica no disponible: {e}")
-
-@st.fragment(run_every="10s")
-def live_bottom():
-    source, df, price, failures = choose_source()
-    if source is None:
-        return
-    try: r=indicators(candles(source,15),15)
-    except ValueError: r=None
-    signal=r["signal"] if r else "ESPERAR"
-    ai = [(h, get_ai_status(df, h)) for h in (10, 15)]
-    technical=(signal if r else "SIN DATOS")
-    votes=f'{r["votes"]}/5' if r else "—"
-    rsi=f'{r["rsi"]:.1f}' if r else "—"
-    macd=f'{r["macd"]:+.2f}' if r else "—"
-    atr=f'{r["atr"]:.1f}' if r else "—"
-    def ai_value(item):
-        _, view = item
-        return escape(view["signal"] if view["status"] == "VALIDADO" else "ESPERAR")
-    st.markdown('<div class="metrics">'+
-        tile("▥","TÉCNICA",technical,votes)+
-        tile("▣","IA 10M",ai_value(ai[0]),escape(ai[0][1]["status"]))+
-        tile("▣","IA 15M",ai_value(ai[1]),escape(ai[1][1]["status"]))+
-        tile("∿","RSI",rsi)+
-        tile("▥","MACD",macd)+
-        tile("∿","ATR",atr)+
-        '</div>',unsafe_allow_html=True)
-    st.markdown(f'<div class="status">● {source} · {datetime.now(timezone.utc).strftime("%H:%M:%S")} UTC · IA experimental · Sin operaciones automáticas</div>',unsafe_allow_html=True)
-    
+        
     with st.expander("Indicadores, IA y diagnóstico · detalles"):
         st.write("PATRONES DE VELAS · 15M")
         try:
@@ -300,4 +243,5 @@ def live_bottom():
 live_top()
 stable_chart()
 live_bottom()
+
 
