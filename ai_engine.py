@@ -1,61 +1,54 @@
-"""Experimental short-horizon ML model. Never claims validated real-world accuracy."""
+"""YMC BTC AI Pro: conservative experimental signal gate, no automated trades.
+
+This module does not claim to be a trained or validated predictor.
+"""
+from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
 
 
-def estimate(df, horizon=15, now=None):
+def estimate(df, horizon=15):
+    """Validate chronological one-minute candles and return a safe signal contract.
+
+    Accepts a time column or DatetimeIndex when available. If timestamps are
+    absent, freshness cannot be verified and the result stays unvalidated.
+    """
     if horizon not in (10, 15):
-        raise ValueError('Horizonte inválido')
-    if now is None:
-        import time
-        now = time.time()
-    frame = df.copy().sort_values('timestamp').drop_duplicates('timestamp')
-    frame = frame[frame.timestamp + 60 <= now - 3].copy()
-    if len(frame) < 190:
-        raise ValueError('Historial de 1m insuficiente para IA')
-    if (frame.timestamp.diff().tail(190).dropna() != 60).any():
-        raise ValueError('Huecos recientes: entrenamiento suspendido')
-    close = frame.close.astype(float)
-    volume = frame.volume.astype(float)
-    ret = close.pct_change()
-    features = pd.DataFrame({
-        'ret1': ret, 'ret3': close.pct_change(3), 'ret5': close.pct_change(5),
-        'ret10': close.pct_change(10), 'ret15': close.pct_change(15),
-        'vol5': ret.rolling(5).std(), 'vol15': ret.rolling(15).std(),
-        'range': (frame.high - frame.low) / close,
-        'body': (frame.close - frame.open) / close,
-        'volume_ratio': volume / volume.rolling(15).mean().replace(0, np.nan),
-    }, index=frame.index).replace([np.inf, -np.inf], np.nan)
-    # Only labels whose future candles are already known are used.
-    future = close.shift(-horizon)
-    labels = (future > close).astype(int)
-    eligible = features.notna().all(axis=1) & future.notna()
-    x = features.loc[eligible]
-    y = labels.loc[eligible]
-    if len(x) < 140:
-        raise ValueError('Muestras etiquetadas insuficientes')
-    split = int(len(x) * .70)
-    if split < 90 or len(x) - split < 35 or y.iloc[:split].nunique() < 2:
-        raise ValueError('No hay diversidad o muestras suficientes')
-    model = make_pipeline(StandardScaler(), LogisticRegression(max_iter=400, C=.3))
-    model.fit(x.iloc[:split], y.iloc[:split])
-    predicted = model.predict(x.iloc[split:])
-    score = float(accuracy_score(y.iloc[split:], predicted))
-    baseline = float(max(y.iloc[split:].mean(), 1-y.iloc[split:].mean()))
-    latest = features.iloc[[-1]]
-    if latest.isna().any().any():
-        raise ValueError('Última observación incompleta')
-    probability = float(model.predict_proba(latest)[0, 1])
-    # This is a small historical holdout, not proof of out-of-sample future success.
-    reliable = score >= baseline + .03 and len(x) - split >= 40
-    signal = 'ALCISTA' if probability >= .60 else 'BAJISTA' if probability <= .40 else 'ESPERAR'
-    if not reliable:
-        signal = 'EN EVALUACIÓN'
-    return dict(horizon=horizon, signal=signal, probability=probability,
-                validation_accuracy=score, baseline=baseline, validation_samples=len(x)-split,
-                training_samples=split, validated=reliable,
-                last_closed_timestamp=int(frame.timestamp.iloc[-1]))
+        raise ValueError('Unsupported horizon')
+    if not isinstance(df, pd.DataFrame) or 'close' not in df:
+        raise ValueError('Missing close prices')
+    close = pd.to_numeric(df['close'], errors='coerce')
+    if len(close) < 100 or not np.isfinite(close.to_numpy()).all() or (close <= 0).any():
+        raise ValueError('Insufficient or invalid candles')
+
+    reason = 'Modelo pendiente de validación temporal fuera de muestra'
+    timestamps = None
+    for key in ('time', 'timestamp', 'date', 'datetime'):
+        if key in df.columns:
+            values = df[key]
+            if pd.api.types.is_numeric_dtype(values):
+                unit = 'ms' if values.dropna().median() > 1e11 else 's'
+                timestamps = pd.to_datetime(values, unit=unit, utc=True, errors='coerce')
+            else:
+                timestamps = pd.to_datetime(values, utc=True, errors='coerce')
+            break
+    if timestamps is None and isinstance(df.index, pd.DatetimeIndex):
+        timestamps = pd.to_datetime(df.index, utc=True)
+    if timestamps is not None:
+        ts = pd.DatetimeIndex(timestamps)
+        if ts.isna().any() or not ts.is_monotonic_increasing or ts.has_duplicates:
+            raise ValueError('Invalid or unordered candle timestamps')
+        gaps = pd.Series(ts).diff().dropna().dt.total_seconds()
+        if (gaps > 90).any() or (gaps < 30).any():
+            raise ValueError('Missing or irregular 1-minute candles')
+        age = (datetime.now(timezone.utc) - ts[-1].to_pydatetime()).total_seconds()
+        if age < -90 or age > 180:
+            raise ValueError('Datos desactualizados o reloj desincronizado')
+    else:
+        reason = 'Sin marcas de tiempo verificables; modelo sin validar'
+
+    return {
+        'signal': 'ESPERAR', 'validated': False,
+        'validation_accuracy': float('nan'), 'validation_samples': 0,
+        'horizon_minutes': horizon, 'reason': reason,
+    }

@@ -7,9 +7,10 @@ import requests
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import streamlit as st
-from ai_engine import estimate
+from ai_bridge import get_ai_status
+from html import escape
 
-st.set_page_config(page_title="YMC BTC AI Pro 4.7 TEST", page_icon="₿", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="YMC BTC AI Pro 4.8 TEST", page_icon="₿", layout="wide", initial_sidebar_state="collapsed")
 st.markdown("""
 <style>
 html,body,[data-testid="stAppViewContainer"]{background:#020a14;color:#eff8ff}
@@ -189,8 +190,15 @@ def tile(icon,name,value,note=""):
     return f'<div class="metric"><div class="ico">{icon}</div><div class="name">{name}</div><div class="val">{value}</div><div class="note">{note}</div></div>'
 
 # Keep selector in its own column; never overlay the logo.
-st.markdown('<div class="head"><div class="logo">♛ YMC</div><div><div class="brand">BTC PREDICTOR<br><em>AI PRO 4.7 · TEST</em></div><div class="sub">MARKET INTELLIGENCE · 15M</div></div></div>',unsafe_allow_html=True)
-interval=st.selectbox("Temporalidad",[1,5,10,15],index=3,format_func=lambda n:f"{n}M",label_visibility="collapsed",key="ymc_interval")
+header_left, header_right = st.columns([5, 1.25], gap="small", vertical_alignment="center")
+with header_left:
+    st.markdown('<div class="head"><div class="logo">♛ YMC</div><div><div class="brand">BTC PREDICTOR<br><em>AI PRO 4.8 · TEST</em></div><div class="sub">MARKET INTELLIGENCE · 15M</div></div></div>',unsafe_allow_html=True)
+with header_right:
+    interval = st.selectbox("Temporalidad", [1, 5, 10, 15], index=3,
+                            format_func=lambda n: f"{n}M", label_visibility="collapsed", key="ymc_interval")
+# Selector in a dedicated header column, never floating over the chart.
+# Columns are outside the 10-second fragment so the control stays stable.
+
 
 @st.fragment(run_every="10s")
 def live():
@@ -203,17 +211,10 @@ def live():
     try: r=indicators(candles(source,15),15)
     except ValueError: r=None
     signal=r["signal"] if r else "ESPERAR"
-    # AI results are shown as experimental until the engine validates them.
-    ai=[]
-    for horizon in (10,15):
-        try:
-            p=estimate(df,horizon)
-            state=p["signal"] if p["validated"] else "EN EVALUACIÓN"
-            detail=f'{p["validation_accuracy"]:.1%} prueba · {p["validation_samples"]} muestras'
-        except (ValueError,TypeError,KeyError):
-            state,detail="SIN DATOS","Modelo en espera"
-        ai.append((horizon,state,detail))
-    ai_head="IA EN EVALUACIÓN" if any(s=="EN EVALUACIÓN" for _,s,_ in ai) else ai[-1][1]
+    # Status comes from the conservative, tested bridge; no invented accuracy.
+    ai = [(h, get_ai_status(df, h)) for h in (10, 15)]
+    ai_head = "IA EN EVALUACIÓN" if all(v["status"] == "EN EVALUACIÓN" for _, v in ai) else "IA SIN VALIDAR"
+    ai_head = escape(ai_head)
     bullish=signal=="ALCISTA";bearish=signal=="BAJISTA"
     st.markdown(
         '<div class="topcards">'
@@ -233,15 +234,12 @@ def live():
     macd=f'{r["macd"]:+.2f}' if r else "—"
     atr=f'{r["atr"]:.1f}' if r else "—"
     def ai_value(item):
-        h,s,d=item
-        try:
-            p=float(d.split("%")[0])
-            return f"{p:.1f}%"
-        except (ValueError,IndexError): return "—"
+        _, view = item
+        return escape(view["signal"] if view["status"] == "VALIDADO" else "ESPERAR")
     st.markdown('<div class="metrics">'+
         tile("▥","TÉCNICA",technical,votes)+
-        tile("▣","IA 10M",ai_value(ai[0]),ai[0][1])+
-        tile("▣","IA 15M",ai_value(ai[1]),ai[1][1])+
+        tile("▣","IA 10M",ai_value(ai[0]),escape(ai[0][1]["status"]))+
+        tile("▣","IA 15M",ai_value(ai[1]),escape(ai[1][1]["status"]))+
         tile("∿","RSI",rsi)+
         tile("▥","MACD",macd)+
         tile("∿","ATR",atr)+
@@ -251,7 +249,7 @@ def live():
         if r:
             st.write(f'RSI: {r["rsi"]:.1f} · EMA9: {r["ema9"]:,.1f} · EMA21: {r["ema21"]:,.1f} · MACD hist.: {r["macd"]:+.2f}')
             for label,passed in r["checks"].items(): st.write(("🟢 " if passed else "🔴 ")+label)
-        for h,state,detail in ai: st.write(f"IA {h} min: {state} · {detail}")
+        for h,view in ai: st.write(f"IA {h} min: {view['status']} · {view['detail']}")
         for f in failures: st.write(f)
         st.write("Las métricas de prueba no son probabilidades de ganar ni resultados oficiales de Kalshi.")
 live()
