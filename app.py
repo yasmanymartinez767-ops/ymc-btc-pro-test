@@ -266,12 +266,9 @@ def live_bottom():
         tile("∿","ATR",atr)+
         '</div>',unsafe_allow_html=True)
     st.markdown(f'<div class="status">● {source} · {datetime.now(timezone.utc).strftime("%H:%M:%S")} UTC · IA experimental · Sin operaciones automáticas</div>',unsafe_allow_html=True)
-    with st.expander("Indicadores, IA y diagnóstico · detalles"):
-        if r:
-         
+    
     with st.expander("Indicadores, IA y diagnóstico · detalles"):
         st.write("PATRONES DE VELAS · 15M")
-
         try:
             patterns = candle_patterns(candles(source, 15), 15)
             for pattern in patterns:
@@ -290,9 +287,7 @@ def live_bottom():
                 st.write(("🟢 " if passed else "🔴 ") + label)
 
         for h, view in ai:
-            st.write(
-                f"IA {h} min: {view['status']} · {view['detail']}"
-            )
+            st.write(f"IA {h} min: {view['status']} · {view['detail']}")
 
         for f in failures:
             st.write(f)
@@ -302,11 +297,7 @@ def live_bottom():
             "de ganar ni resultados oficiales de Kalshi."
         )
 
-            st.write(f'RSI: {r["rsi"]:.1f} · EMA9: {r["ema9"]:,.1f} · EMA21: {r["ema21"]:,.1f} · MACD hist.: {r["macd"]:+.2f}')
-            for label,passed in r["checks"].items(): st.write(("🟢 " if passed else "🔴 ")+label)
-        for h,view in ai: st.write(f"IA {h} min: {view['status']} · {view['detail']}")
-        for f in failures: st.write(f)
-        st.write("Las métricas de prueba no son probabilidades de ganar ni resultados oficiales de Kalshi.")
 live_top()
 stable_chart()
 live_bottom()
+
